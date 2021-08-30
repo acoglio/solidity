@@ -73,27 +73,6 @@ unsigned Assembly::bytesRequired(unsigned subTagSize) const
 namespace
 {
 
-string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location)
-{
-	if (!_location.hasText() || _sourceCodes.empty())
-		return {};
-
-	auto it = _sourceCodes.find(*_location.sourceName);
-	if (it == _sourceCodes.end())
-		return {};
-
-	string const& source = it->second;
-	if (static_cast<size_t>(_location.start) >= source.size())
-		return {};
-
-	string cut = source.substr(static_cast<size_t>(_location.start), static_cast<size_t>(_location.end - _location.start));
-	auto newLinePos = cut.find_first_of("\n");
-	if (newLinePos != string::npos)
-		cut = cut.substr(0, newLinePos) + "...";
-
-	return cut;
-}
-
 class Functionalizer
 {
 public:
@@ -156,7 +135,7 @@ public:
 			m_out << " " + escapeAndQuoteString(*m_location.sourceName);
 		if (m_location.hasText())
 			m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
-		m_out << "  " << locationFromSources(m_sourceCodes, m_location);
+		m_out << "  " << m_location.singleLineSnippet(m_sourceCodes);
 		m_out << " */" << endl;
 	}
 

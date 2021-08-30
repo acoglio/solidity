@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <libsolutil/Common.h>
+
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -98,6 +100,9 @@ struct SourceLocation
 
 		return _a;
 	}
+
+	std::string singleLineSnippet(StringMap const& _sourceCodes) const;
+	std::string singleLineSnippet(std::string const& _sourceCode) const;
 
 	int start = -1;
 	int end = -1;

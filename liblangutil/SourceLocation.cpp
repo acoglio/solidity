@@ -27,6 +27,34 @@ using namespace solidity;
 using namespace solidity::langutil;
 using namespace std;
 
+string SourceLocation::singleLineSnippet(StringMap const& _sourceCodes) const
+{
+	if (!this->hasText() || _sourceCodes.empty())
+		return {};
+
+	auto it = _sourceCodes.find(*this->sourceName);
+	if (it == _sourceCodes.end())
+		return {};
+
+	return singleLineSnippet(it->second);
+}
+
+string SourceLocation::singleLineSnippet(string const& _sourceCode) const
+{
+	if (!this->hasText())
+		return {};
+
+	if (static_cast<size_t>(this->start) >= _sourceCode.size())
+		return {};
+
+	string cut = _sourceCode.substr(static_cast<size_t>(this->start), static_cast<size_t>(this->end - this->start));
+	auto newLinePos = cut.find_first_of("\n");
+	if (newLinePos != string::npos)
+		cut = cut.substr(0, newLinePos) + "...";
+
+	return cut;
+}
+
 SourceLocation solidity::langutil::parseSourceLocation(string const& _input, vector<shared_ptr<string const>> const& _sourceNames)
 {
 	// Expected input: "start:length:sourceindex"
