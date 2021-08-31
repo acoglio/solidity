@@ -256,7 +256,33 @@ string AsmPrinter::appendTypeName(YulString _type, bool _isBoolLiteral) const
 		return ":" + _type.str();
 }
 
-string AsmPrinter::formatSourceLocationComment(shared_ptr<DebugData const> const& _debugData,  bool _statement)
+string AsmPrinter::formatSourceLocationComment(
+	SourceLocation const& _location,
+	map<string, unsigned> const& _nameToSourceIndex,
+	bool _statement
+)
+{
+	solAssert(!_nameToSourceIndex.empty(), "");
+
+	string sourceIndex = "-1";
+	if (_location.sourceName)
+		sourceIndex = to_string(_nameToSourceIndex.at(*_location.sourceName));
+
+	string sourceLocation =
+		"@src " +
+		sourceIndex +
+		":" +
+		to_string(_location.start) +
+		":" +
+		to_string(_location.end);
+
+	return
+		_statement ?
+		"/// " + sourceLocation + "\n" :
+		"/** " + sourceLocation + " */ ";
+}
+
+string AsmPrinter::formatSourceLocationComment(shared_ptr<DebugData const> const& _debugData, bool _statement)
 {
 	if (
 		!_debugData ||
@@ -267,19 +293,9 @@ string AsmPrinter::formatSourceLocationComment(shared_ptr<DebugData const> const
 
 	m_lastLocation = _debugData->location;
 
-	string sourceIndex = "-1";
-	if (_debugData->location.sourceName)
-		sourceIndex = to_string(m_nameToSourceIndex.at(*_debugData->location.sourceName));
-
-	string sourceLocation =
-		"@src " +
-		sourceIndex +
-		":" +
-		to_string(_debugData->location.start) +
-		":" +
-		to_string(_debugData->location.end);
-	return
-		_statement ?
-		"/// " + sourceLocation + "\n" :
-		"/** " + sourceLocation + " */ ";
+	return formatSourceLocationComment(
+		_debugData->location,
+		m_nameToSourceIndex,
+		_statement
+	);
 }
