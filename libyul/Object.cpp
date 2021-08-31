@@ -35,8 +35,9 @@
 
 using namespace std;
 using namespace solidity;
-using namespace solidity::yul;
+using namespace solidity::langutil;
 using namespace solidity::util;
+using namespace solidity::yul;
 
 namespace
 {
@@ -50,12 +51,15 @@ string indent(std::string const& _input)
 
 }
 
-string Data::toString(Dialect const*, optional<SourceNameMap>) const
+string Data::toString(Dialect const*, optional<SourceNameMap>, langutil::CharStreamProvider const*) const
 {
 	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
 }
 
-string Object::toString(Dialect const* _dialect) const
+string Object::toString(
+	Dialect const* _dialect,
+	CharStreamProvider const* _soliditySourceProvider
+) const
 {
 	string useSrcComment;
 
@@ -66,19 +70,27 @@ string Object::toString(Dialect const* _dialect) const
 				return to_string(_pair.first) + ":" + util::escapeAndQuoteString(*_pair.second);
 			})) +
 			"\n";
-	return useSrcComment + toString(_dialect, debugData ? debugData->sourceNames : optional<SourceNameMap>{});
+	return useSrcComment + toString(
+		_dialect,
+		debugData ? debugData->sourceNames : optional<SourceNameMap>{},
+		_soliditySourceProvider
+	);
 }
 
-string Object::toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const
+string Object::toString(
+	Dialect const* _dialect,
+	optional<SourceNameMap> _sourceNames,
+	CharStreamProvider const* _soliditySourceProvider
+) const
 {
 	yulAssert(code, "No code");
-	string inner = "code " + AsmPrinter{_dialect, _sourceNames}(*code);
+	string inner = "code " + AsmPrinter{_dialect, _sourceNames, _soliditySourceProvider}(*code);
 
 	for (auto const& obj: subObjects)
 	{
 		if (auto const* o = dynamic_cast<Object const*>(obj.get()))
 			yulAssert(!o->debugData || !o->debugData->sourceNames, "");
-		inner += "\n" + obj->toString(_dialect, _sourceNames);
+		inner += "\n" + obj->toString(_dialect, _sourceNames, _soliditySourceProvider);
 	}
 
 	return "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";

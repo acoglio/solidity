@@ -27,6 +27,7 @@
 #include <libyul/Dialect.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -38,6 +39,7 @@
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
 
@@ -259,14 +261,23 @@ string AsmPrinter::appendTypeName(YulString _type, bool _isBoolLiteral) const
 string AsmPrinter::formatSourceLocationComment(
 	SourceLocation const& _location,
 	map<string, unsigned> const& _nameToSourceIndex,
-	bool _statement
+	bool _statement,
+	CharStreamProvider const* _soliditySourceProvider
 )
 {
 	solAssert(!_nameToSourceIndex.empty(), "");
 
 	string sourceIndex = "-1";
+	string solidityCodeSnippet = "";
 	if (_location.sourceName)
+	{
 		sourceIndex = to_string(_nameToSourceIndex.at(*_location.sourceName));
+
+		if (_soliditySourceProvider)
+			solidityCodeSnippet = _location.singleLineSnippet(
+				_soliditySourceProvider->charStream(*_location.sourceName).source()
+			);
+	}
 
 	string sourceLocation =
 		"@src " +
@@ -278,8 +289,8 @@ string AsmPrinter::formatSourceLocationComment(
 
 	return
 		_statement ?
-		"/// " + sourceLocation + "\n" :
-		"/** " + sourceLocation + " */ ";
+		"/// " + joinHumanReadable(vector<string>{sourceLocation, solidityCodeSnippet}, "  ") + "\n" :
+		"/** " + joinHumanReadable(vector<string>{sourceLocation, solidityCodeSnippet}, "  ") + " */ ";
 }
 
 string AsmPrinter::formatSourceLocationComment(shared_ptr<DebugData const> const& _debugData, bool _statement)
@@ -296,6 +307,7 @@ string AsmPrinter::formatSourceLocationComment(shared_ptr<DebugData const> const
 	return formatSourceLocationComment(
 		_debugData->location,
 		m_nameToSourceIndex,
-		_statement
+		_statement,
+		m_soliditySourceProvider
 	);
 }
