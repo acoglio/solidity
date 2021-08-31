@@ -29,10 +29,10 @@ using namespace std;
 
 string SourceLocation::singleLineSnippet(StringMap const& _sourceCodes) const
 {
-	if (!this->hasText() || _sourceCodes.empty())
+	if (!hasText() || _sourceCodes.empty())
 		return {};
 
-	auto it = _sourceCodes.find(*this->sourceName);
+	auto it = _sourceCodes.find(*sourceName);
 	if (it == _sourceCodes.end())
 		return {};
 
@@ -41,13 +41,13 @@ string SourceLocation::singleLineSnippet(StringMap const& _sourceCodes) const
 
 string SourceLocation::singleLineSnippet(string const& _sourceCode) const
 {
-	if (!this->hasText())
+	if (!hasText())
 		return {};
 
-	if (static_cast<size_t>(this->start) >= _sourceCode.size())
+	if (static_cast<size_t>(start) >= _sourceCode.size())
 		return {};
 
-	string cut = _sourceCode.substr(static_cast<size_t>(this->start), static_cast<size_t>(this->end - this->start));
+	string cut = _sourceCode.substr(static_cast<size_t>(start), static_cast<size_t>(end - start));
 	auto newLinePos = cut.find_first_of("\n\r");
 	if (newLinePos != string::npos)
 		cut = cut.substr(0, newLinePos) + "...";
