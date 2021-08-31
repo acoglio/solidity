@@ -48,7 +48,7 @@ string SourceLocation::singleLineSnippet(string const& _sourceCode) const
 		return {};
 
 	string cut = _sourceCode.substr(static_cast<size_t>(this->start), static_cast<size_t>(this->end - this->start));
-	auto newLinePos = cut.find_first_of("\n");
+	auto newLinePos = cut.find_first_of("\n\r");
 	if (newLinePos != string::npos)
 		cut = cut.substr(0, newLinePos) + "...";
 
